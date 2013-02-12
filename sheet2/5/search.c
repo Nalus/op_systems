@@ -59,6 +59,7 @@ void* search_wrapper(void* inst)
   //flushe file stream 
   fclose(fp);
   //return nothing
+  return NULL;
 }
 
 int main (int argc, char *argv[])
@@ -76,7 +77,7 @@ int main (int argc, char *argv[])
   int i = 0;
   while(i<argc-2)
   { massive[i] = malloc(sizeof(struct input));
-    //pattern is the msae for each file
+    //pattern is the same for each file
     massive[i]-> pat = argv[1];
     i++;
   }
