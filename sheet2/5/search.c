@@ -42,17 +42,21 @@ int search (FILE *f, char *pat)
 
 void* search_wrapper(void* inst)
 { FILE * fp;
-  int * result = malloc(sizeof(int));
+  int result;
   struct input* ins = (struct input*) inst;
+
+  //open file stream, if file does not exist, return an error
   if((fp = fopen(ins->file, "r")) == NULL) { perror("Bad input\n"); }
-  *result = search(fp, ins->pat);
-  if (-1 == (*result))
+  //search the file for the pattern
+  result = search(fp, ins->pat);
+  if (-1 == (result))
   { printf ("pattern '%s' was not found in %s\n", ins->pat, ins->file);
   } else
-  { printf ("pattern '%s' found in %s offset=%d\n", ins->pat,ins->file,*result);
+  { printf ("pattern '%s' found in %s offset=%d\n", ins->pat,ins->file,result);
   }
+
+  //freeing memory and flushes file stream 
   fclose(fp);
-  free(result);// free(ins);// free(inst);
   pthread_exit(NULL);
 }
 
