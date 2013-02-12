@@ -58,8 +58,7 @@ void* search_wrapper(void* inst)
 
   //flushe file stream 
   fclose(fp);
-  //exit pthread, return null
-  pthread_exit(NULL);
+  //return nothing
 }
 
 int main (int argc, char *argv[])
