@@ -83,18 +83,18 @@ int main (int argc, char *argv[])
   }
 
   //create thread for each file
-  i=2;
-  while(i<argc)
+  i=0;
+  while(i<argc-2)
     //set file name to corresponding argument
-  { massive[i-2]-> file = argv[i];
+  { massive[i]-> file = argv[i+2];
     //create thread and store its id in tids array
-    pthread_create(&tids[i-2], NULL, search_wrapper, (void *) massive[i-2]);
+    pthread_create(&tids[i], NULL, search_wrapper, (void *) massive[i]);
     //printf("CREATE: %d\n", i);
     i++;
   }
-  i=2;
-  while(i<argc)
-  { pthread_join(tids[i-2], NULL);
+  i=0;
+  while(i<argc-2)
+  { pthread_join(tids[i], NULL);
     //printf("JOIN: %d\n", i);
     i++;
   }
@@ -103,8 +103,8 @@ int main (int argc, char *argv[])
   i=0;
   while(i<argc-2)
   { free(massive[i]);
-    //free(tids[i]);
     i++;
   }
+  //free memory at array pointers
   free(massive); free(tids);
 }
