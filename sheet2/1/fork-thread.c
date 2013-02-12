@@ -7,20 +7,18 @@
 #include <sys/wait.h>
 #include <sys/time.h>
 
-#include <pthread.h>
+#include <unistd.h>
 
 
 /* Dummy function spawned by every thread/process.  */
-int dummy (void *data)
-{
-    return 0;
+void* dummy()
+//made this function return NULL to satisfy the pthread_create method
+{ return NULL;
 }
 
 /* Time difference between a and b in microseconds.  */
 int64_t xelapsed (struct timespec a, struct timespec b)
-{
-    return ((int64_t)a.tv_sec - b.tv_sec) * 1000000
-           + ((int64_t)a.tv_nsec - b.tv_nsec) / 1000LL;
+{ return ((int64_t)a.tv_sec - b.tv_sec) * 1000000 + ((int64_t)a.tv_nsec - b.tv_nsec) / 1000LL;
 }
 
 /* Measure the time for NUMBER fork creations.  */
@@ -28,65 +26,37 @@ void measure_forks (unsigned number)
 { struct timespec start, stop, finish;
   unsigned i = 0;
 
-  clock_gettime(CLOCK_REALTIME, &start);
+  //store start time, handle error on failure
+  if(clock_gettime(CLOCK_REALTIME, &start) == -1) { perror("Bad time.\n"); exit(EXIT_SUCCESS);}
   pid_t* pids = malloc (number*sizeof(pid_t));
   for (i = 0;i < number; i++)
-  { /* TODO Call FORK,
-    execute DUMMY in a child,
-    save process id.  */
-    pids[i] = fork();
+  { pids[i] = fork();
+    //in the child
     if(pids[i] == 0)
-    { dummy(NULL);
+    { dummy();
+      //free the pointer memory that has been forked
+      free(pids);
       exit(EXIT_SUCCESS);
     }
+    else if(pids[i] < 0)
+    { perror("Bad fork.\n"); exit(EXIT_SUCCESS);}
   }
-  clock_gettime(CLOCK_REALTIME, &stop);
+  //store the stop time
+  if(clock_gettime(CLOCK_REALTIME, &stop) == -1) { perror("Bad time.\n"); exit(EXIT_SUCCESS);}
 
   for (i = 0; i < number; i++)
-  { /* TODO Wait for every process id
-    spawned in the previous loop.  */
-    wait(&pids[i]);
+  //wait for every child for die
+  { wait(&pids[i]);
   }
-  clock_gettime(CLOCK_REALTIME, &finish);
+  //get the time needed for every child to die
+  if(clock_gettime(CLOCK_REALTIME, &finish) == -1) { perror("Bad time.\n"); exit(EXIT_SUCCESS);}
 
+  //print out the time
   printf ("process: num=%03u, fork=%03li, wait=%03li, total=%03li\n",
           number, xelapsed (stop, start), xelapsed (finish, stop),
           xelapsed (finish, start));
-}
-
-/* Measure the time for NUMBER thread creations.  */
-void measure_threads (unsigned number)
-{ /* TODO Modify MEASURE_FORKS, replacing FORK
-  with thread creation and WAIT with
-  thread join.  */
-  struct timespec start, stop, finish;
-  unsigned i = 0;
-
-  clock_gettime(CLOCK_REALTIME, &start);
-  int threadSuc;
-  pthread_t* tids = malloc (number*sizeof(pthread_t));
-  for (i = 0;i < number; i++)
-  { /* TODO Call FORK,
-    execute DUMMY in a child,
-    save process id.  */
-    threadSuc = pthread_create(&tids[i], NULL, dummy, NULL);
-    if(threadSuc < 0)
-    { puts("Bad thread id, exiting.\n");
-      exit(EXIT_SUCCESS);
-    }
-  }
-  clock_gettime(CLOCK_REALTIME, &stop);
-
-  for (i = 0; i < number; i++)
-  { /* TODO Wait for every process id
-    spawned in the previous loop.  */
-    pthread_join(tids[i], NULL);
-  }
-  clock_gettime(CLOCK_REALTIME, &finish);
-
-  printf ("thread: num=%03u, fork=%03li, join=%03li, total=%03li\n",
-          number, xelapsed (stop, start), xelapsed (finish, stop),
-          xelapsed (finish, start));
+  //free memory used for array of process ids
+  free(pids);
 }
 
 int main (int argc, char *argv[])
@@ -99,11 +69,7 @@ int main (int argc, char *argv[])
   { printf("Please provide only positive integers as arguements.\n");
     exit(EXIT_SUCCESS);
   }
-   /* TODO Get a number of instances from the argument list
-      TODO Check that the arguments are valid
-      TODO Replace the argument in the subsequent function calls.  */
 
   measure_forks (load);
-  measure_threads (load);
   return EXIT_SUCCESS;
 }
