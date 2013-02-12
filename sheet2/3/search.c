@@ -66,4 +66,5 @@ int main (int argc, char *argv[])
     //close file stream
     fclose(fp);
   }
+  return EXIT_SUCCESS;
 }

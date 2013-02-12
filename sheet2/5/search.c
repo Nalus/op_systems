@@ -113,4 +113,5 @@ int main (int argc, char *argv[])
   }
   //free memory at array pointers
   free(massive); free(tids);
+  return EXIT_SUCCESS;
 }
