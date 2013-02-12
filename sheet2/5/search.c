@@ -16,28 +16,27 @@ struct input{char * file; char * pat;};
        -1   -- in case the pattern was not found
       x > 0 -- where x is a position of the match.  */
 int search (FILE *f, char *pat)
-{
-    int i, j, c, pos = 1;
-    const char *ptr;
+{ int i, j, c, pos = 1;
+  const char *ptr;
 
-    for (; EOF != (c = fgetc (f)); pos++) {
-        if (c != *pat)
-            continue;
+  for (; EOF != (c = fgetc (f)); pos++)
+  { if (c != *pat)
+      continue;
 
-        for (i = 1, ptr = pat + 1; *ptr != '\0'; i++, ptr++)
-            if (*ptr != (c = fgetc (f))) {
-                ungetc (c, f);
-                break;
-            }
+    for (i = 1, ptr = pat + 1; *ptr != '\0'; i++, ptr++)
+      if (*ptr != (c = fgetc (f))) {
+        ungetc (c, f);
+        break;
+      }
 
-        if (*ptr == '\0')
-            return pos;
-        else
-            for (j = i - 1; j > 0; j--)
-                ungetc (pat[j], f);
-    }
+      if (*ptr == '\0')
+        return pos;
+      else
+        for (j = i - 1; j > 0; j--)
+          ungetc (pat[j], f);
+  }
 
-    return -1;
+  return -1;
 }
 
 void* search_wrapper(void* inst)
@@ -57,31 +56,38 @@ void* search_wrapper(void* inst)
   { printf ("pattern '%s' found in %s offset=%d\n", ins->pat,ins->file,result);
   }
 
-  //freeing memory and flushes file stream 
+  //flushe file stream 
   fclose(fp);
+  //exit pthread, return null
   pthread_exit(NULL);
 }
 
 int main (int argc, char *argv[])
 { if(argc<3)
   { puts("Please provide at least 2 arguements: a string pattern and a text file.\n");
-    puts("For example: #test 1.txt\n");
+    puts("For example: 'test' 1.txt\n");
     exit(EXIT_SUCCESS);
   }
-  
-  pthread_t* tids = malloc ((argc-2)*sizeof(pthread_t));
-  struct input* massive[argc];
 
+  //allocate memory for array of pointers to threads and array of pointers to struct input
+  pthread_t* tids = malloc ((argc-2)*sizeof(pthread_t));
+  struct input** massive = malloc ((argc-2)*sizeof(struct input*));
+
+  //allocate memory for each struct in array massive and set patten of each struct to sysem argument
   int i = 0;
-  while(i<argc)
+  while(i<argc-2)
   { massive[i] = malloc(sizeof(struct input));
+    //pattern is the msae for each file
     massive[i]-> pat = argv[1];
     i++;
   }
 
+  //create thread for each file
   i=2;
   while(i<argc)
+    //set file name to corresponding argument
   { massive[i-2]-> file = argv[i];
+    //create thread and store its id in tids array
     pthread_create(&tids[i-2], NULL, search_wrapper, (void *) massive[i-2]);
     //printf("CREATE: %d\n", i);
     i++;
@@ -95,9 +101,10 @@ int main (int argc, char *argv[])
 
   //free all memory allocated for structures
   i=0;
-  while(i<argc)
+  while(i<argc-2)
   { free(massive[i]);
+    //free(tids[i]);
     i++;
   }
-  free(tids);
+  free(massive); free(tids);
 }
