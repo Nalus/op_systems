@@ -71,6 +71,7 @@ int main (int argc, char *argv[])
 
   //allocate memory for array of pointers to threads and array of pointers to struct input
   pthread_t* tids = malloc ((argc-2)*sizeof(pthread_t));
+  //checks the return values for failures
   if(tids == NULL) { perror("Pthread_t array malloc failed\n"); exit(EXIT_SUCCESS);}
   struct input** massive = malloc ((argc-2)*sizeof(struct input*));
   if(massive == NULL) { perror("Struct input* array malloc failed\n"); exit(EXIT_SUCCESS);}
@@ -79,7 +80,7 @@ int main (int argc, char *argv[])
   int i = 0;
   while(i<argc-2)
   { massive[i] = malloc(sizeof(struct input));
-    //handle failure
+    //check for failure
     if(massive[i] == NULL) { perror("Structure malloc failed\n"); exit(EXIT_SUCCESS);}
     //pattern is the same for each file
     massive[i]-> pat = argv[1];
