@@ -8,12 +8,12 @@
 #include <sys/time.h>
 
 #include <pthread.h>
+#include <unistd.h>
 
 
 /* Dummy function spawned by every thread/process.  */
-int dummy (void *data)
-{
-    return 0;
+void* dummy ()//void *data)
+{ return NULL;
 }
 
 /* Time difference between a and b in microseconds.  */
@@ -31,10 +31,7 @@ void measure_forks (unsigned number)
   clock_gettime(CLOCK_REALTIME, &start);
   pid_t* pids = malloc (number*sizeof(pid_t));
   for (i = 0;i < number; i++)
-  { /* TODO Call FORK,
-    execute DUMMY in a child,
-    save process id.  */
-    pids[i] = fork();
+  { pids[i] = fork();
     if(pids[i] == 0)
     { dummy(NULL);
       exit(EXIT_SUCCESS);
@@ -43,9 +40,7 @@ void measure_forks (unsigned number)
   clock_gettime(CLOCK_REALTIME, &stop);
 
   for (i = 0; i < number; i++)
-  { /* TODO Wait for every process id
-    spawned in the previous loop.  */
-    wait(&pids[i]);
+  { wait(&pids[i]);
   }
   clock_gettime(CLOCK_REALTIME, &finish);
 
@@ -56,31 +51,19 @@ void measure_forks (unsigned number)
 
 /* Measure the time for NUMBER thread creations.  */
 void measure_threads (unsigned number)
-{ /* TODO Modify MEASURE_FORKS, replacing FORK
-  with thread creation and WAIT with
-  thread join.  */
-  struct timespec start, stop, finish;
+{ struct timespec start, stop, finish;
   unsigned i = 0;
 
   clock_gettime(CLOCK_REALTIME, &start);
   int threadSuc;
   pthread_t* tids = malloc (number*sizeof(pthread_t));
   for (i = 0;i < number; i++)
-  { /* TODO Call FORK,
-    execute DUMMY in a child,
-    save process id.  */
-    threadSuc = pthread_create(&tids[i], NULL, dummy, NULL);
-    if(threadSuc < 0)
-    { puts("Bad thread id, exiting.\n");
-      exit(EXIT_SUCCESS);
-    }
+  { if((threadSuc = pthread_create(&tids[i], NULL, dummy, NULL)) != 0) { perror("Bad thread id, exiting.\n"); exit(EXIT_SUCCESS);}
   }
   clock_gettime(CLOCK_REALTIME, &stop);
 
   for (i = 0; i < number; i++)
-  { /* TODO Wait for every process id
-    spawned in the previous loop.  */
-    pthread_join(tids[i], NULL);
+  { pthread_join(tids[i], NULL);
   }
   clock_gettime(CLOCK_REALTIME, &finish);
 
@@ -99,9 +82,6 @@ int main (int argc, char *argv[])
   { printf("Please provide only positive integers as arguements.\n");
     exit(EXIT_SUCCESS);
   }
-   /* TODO Get a number of instances from the argument list
-      TODO Check that the arguments are valid
-      TODO Replace the argument in the subsequent function calls.  */
 
   measure_forks (load);
   measure_threads (load);
