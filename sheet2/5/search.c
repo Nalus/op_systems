@@ -51,7 +51,7 @@ void* search_wrapper(void* inst)
   } else
   { printf ("pattern '%s' found in %s offset=%d\n", ins->pat,ins->file,*result);
   }
-  free(result); free(ins);
+  free(result); free(ins);// free(inst);
   pthread_exit(NULL);
 }
 
@@ -62,24 +62,34 @@ int main (int argc, char *argv[])
     exit(EXIT_SUCCESS);
   }
   
-  int i = 2;
-  int pos[1] = {0};
-  struct input * inst = malloc(sizeof(struct input));
-  inst-> pat = argv[1];
+  int i = 0;
   pthread_t* tids = malloc ((argc-2)*sizeof(pthread_t));
-
-
+  struct input* massive[argc];
   while(i<argc)
-  { inst-> file = argv[i];
-    pthread_create(&tids[i-2], NULL, search_wrapper, (void *) inst);
+  { massive[i] = malloc(sizeof(struct input));
+    massive[i]-> pat = argv[1];
+    i++;
+  }
+
+  i=2;
+  while(i<argc)
+  { massive[i-2]-> file = argv[i];
+    pthread_create(&tids[i-2], NULL, search_wrapper, (void *) massive[i-2]);
     printf("CREATE: %d\n", i);
     i++;
   }
   i=2;
   while(i<argc)
-  { pthread_join(tids[i-2], (void **)&pos);
+  { pthread_join(tids[i-2], NULL);
     printf("JOIN: %d\n", i);
     i++;
   }
-  //free(inst); free(tids);
+
+  //free all memory allocated for structures
+  i=0;
+  while(i<argc)
+  { free(massive[i]);
+    i++;
+  }
+  free(tids);
 }
