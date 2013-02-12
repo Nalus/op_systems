@@ -46,7 +46,13 @@ void* search_wrapper(void* inst)
   struct input* ins = (struct input*) inst;
   if((fp = fopen(ins->file, "r")) == NULL) { perror("Bad input\n"); }
   *result = search(fp, ins->pat);
-  pthread_exit(result);
+  if (-1 == (*result))
+  { printf ("pattern '%s' was not found in %s\n", ins->pat, ins->file);
+  } else
+  { printf ("pattern '%s' found in %s offset=%d\n", ins->pat,ins->file,*result);
+  }
+  free(result); free(ins);
+  pthread_exit(NULL);
 }
 
 int main (int argc, char *argv[])
@@ -73,12 +79,7 @@ int main (int argc, char *argv[])
   while(i<argc)
   { pthread_join(tids[i-2], (void **)&pos);
     printf("JOIN: %d\n", i);
-    if (-1 == (pos[0]))
-    { printf ("pattern '%s' was not found in %s\n", inst->pat, argv[i]);
-    } else
-    { printf ("pattern '%s' found in %s offset=%d\n", inst->pat,argv[i],pos[0]);
-    }
     i++;
   }
-  free(inst); free(tids);
+  //free(inst); free(tids);
 }
