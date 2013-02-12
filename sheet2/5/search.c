@@ -50,8 +50,10 @@ void* search_wrapper(void* inst)
   //search the file for the pattern
   result = search(fp, ins->pat);
   if (-1 == (result))
+  //if pattern is not found
   { printf ("pattern '%s' was not found in %s\n", ins->pat, ins->file);
   } else
+  //if found, print out the offset
   { printf ("pattern '%s' found in %s offset=%d\n", ins->pat,ins->file,result);
   }
 
