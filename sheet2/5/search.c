@@ -71,12 +71,16 @@ int main (int argc, char *argv[])
 
   //allocate memory for array of pointers to threads and array of pointers to struct input
   pthread_t* tids = malloc ((argc-2)*sizeof(pthread_t));
+  if(tids == NULL) { perror("Pthread_t array malloc failed\n"); exit(EXIT_SUCCESS);}
   struct input** massive = malloc ((argc-2)*sizeof(struct input*));
+  if(massive == NULL) { perror("Struct input* array malloc failed\n"); exit(EXIT_SUCCESS);}
 
   //allocate memory for each struct in array massive and set patten of each struct to sysem argument
   int i = 0;
   while(i<argc-2)
   { massive[i] = malloc(sizeof(struct input));
+    //handle failure
+    if(massive[i] == NULL) { perror("Structure malloc failed\n"); exit(EXIT_SUCCESS);}
     //pattern is the same for each file
     massive[i]-> pat = argv[1];
     i++;
@@ -88,19 +92,19 @@ int main (int argc, char *argv[])
   //set file name to corresponding argument
   { massive[i]-> file = argv[i+2];
     //create thread and store its id in tids array; make sure creation failure is handled
-    if((pthread_create(&tids[i], NULL, search_wrapper, (void *) massive[i])) != 0) { perror("Thread not created\n"); }
+    if((pthread_create(&tids[i], NULL, search_wrapper, (void *) massive[i])) != 0) { perror("Thread not created\n"); exit(EXIT_SUCCESS);}
     //printf("CREATE: %d\n", i);
     i++;
   }
   i=0;
   while(i<argc-2)
   //join threads, do not store return values; make sure joining failure is handled
-  { if((pthread_join(tids[i], NULL)) != 0) { perror("Thread not created\n"); }
+  { if((pthread_join(tids[i], NULL)) != 0) { perror("Thread not created\n"); exit(EXIT_SUCCESS);}
     //printf("JOIN: %d\n", i);
     i++;
   }
 
-  //free all memory allocated for structures
+  //free all memory allocated for structures inside the massive array
   i=0;
   while(i<argc-2)
   { free(massive[i]);
