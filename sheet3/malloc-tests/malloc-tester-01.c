@@ -36,10 +36,10 @@ main ()
     memset (mem_pool, 0, N*sizeof (struct chunk));
 
 
-    if (-1 == setrlimit (RLIMIT_AS, &new_limit))
-        err (EXIT_FAILURE, "setrlimit failed");
-    if (-1 == setrlimit (RLIMIT_DATA, &new_limit))
-        err (EXIT_FAILURE, "setrlimit failed");
+    //if (-1 == setrlimit (RLIMIT_AS, &new_limit))
+    //    err (EXIT_FAILURE, "setrlimit failed");
+    //if (-1 == setrlimit (RLIMIT_DATA, &new_limit))
+    //    err (EXIT_FAILURE, "setrlimit failed");
 
 /* Free the cell IDX in the POOL, allocte memory
    of size N.  If malloc failed, goto cleanup.
