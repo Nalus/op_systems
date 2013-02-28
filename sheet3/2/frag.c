@@ -6,12 +6,12 @@
 #define MB 1024*1024
 
 int main()
-{ void* a = mymalloc(1000*MB);
+{ char** a = mymalloc(1000*MB);
+  *a = "baa";
 
   myfree(a);
 
   void* b = mymalloc(1022*MB);
-  printf("Busy %p\n",b);
-
-  myfree(b);
+  if(b==NULL) printf("malloc failed, segmentation fault %p\n",b);
+  else myfree(b);
 }

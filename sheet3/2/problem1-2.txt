@@ -1,3 +1,15 @@
+#author: Konstantin Devyatov | kd79 | H0004640
+
 Problem 1.2
 
-In folder, together with this text file, you could find
+In folder, together with this text file, you could find frag.c file.
+This is a test file designed to expose a simple flow of my malloc implementation - horrendous fragmentation.
+
+When run the program asks to be allocated 1000 MB (out of 1 GB available to malloc). Then immediately frees the memory.
+
+Next the program requests 1023 MB of memory, which my malloc is failing to provide.
+This is because memory is never defragmentated and is to be slowly crushed by malloc splits.
+
+The program prints to stdout a error message, if a malloc call returns NULL pointer (which means it has no free memory to allocate). However, by freeing previous chunk, the user is sure that all memory is free.
+
+Next feature of my malloc implementation will be defragmentation,to merge non-busy memory when possible while freeing. 

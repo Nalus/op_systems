@@ -7,9 +7,9 @@
 #define BUSY 1
 
 struct CHUNK
-{ size_t ssz;
+{ void* mem;
+  size_t ssz;
   int busy;
-  void* mem;
   struct CHUNK* next;
 };
 typedef struct CHUNK chunk;
@@ -57,24 +57,35 @@ void* mymalloc(size_t input)
   { current = current->next; }
 
   if(current->ssz < input) { return NULL; }
-  else { return split(current, input); } //(current->busy == SLACK)
+  else { return split(current, input)->mem; } //(current->busy == SLACK)
 }
 
 void myfree(void* finger)
-{ if(finger<end && finger>((void *) start))
+{ if(finger<end && finger>=((void *) start))
   { //pointer outside the range
-    chunk* possible = ((chunk*) (((size_t) finger) - controlSize));
+    chunk* possible = ((chunk *) (finger - controlSize));
     if(possible->mem == finger)
     { //check that the pointer points to this chunk
       possible->busy = SLACK; 
     }
+    //else puts("not a real struct\n");
   }
-  puts("free broke");
+  //else puts("out of bounds\n");
 }
 
 void printFrees()
 { chunk* piece = start;
-  printf("First Free %p, size: %lu\n", (void *) piece, piece->ssz);
+  printf("1st Free %p, size: %lu\n", (void *) piece, piece->ssz);
   while((piece=piece->next)!=NULL)
-    printf("Free %p, size: %lu\n", (void *) piece, piece->ssz);
+    printf("Nth Free %p, size: %lu\n", (void *) piece, piece->ssz);
+}
+
+void* findMem(void* mem)
+{ chunk* piece = start;
+  while(piece!=NULL)
+  { if(piece->mem == mem) { return ((void *) piece); }
+    piece = piece->next;
+  }
+
+  return NULL;
 }
