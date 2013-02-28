@@ -71,3 +71,10 @@ void myfree(void* finger)
   }
   puts("free broke");
 }
+
+void printFrees()
+{ chunk* piece = start;
+  printf("First Free %p, size: %lu\n", (void *) piece, piece->ssz);
+  while((piece=piece->next)!=NULL)
+    printf("Free %p, size: %lu\n", (void *) piece, piece->ssz);
+}

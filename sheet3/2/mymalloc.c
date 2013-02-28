@@ -16,7 +16,7 @@ typedef struct CHUNK chunk;
 
 static chunk* start = NULL;
 static void* end = NULL;
-const size_t controlSize = sizeof(chunk);
+const static size_t controlSize = sizeof(chunk);
 
 //splits a free chunks to accomodate allocation
 //the allocation happens at the start of the free block
@@ -70,4 +70,11 @@ void myfree(void* finger)
     }
   }
   puts("free broke");
+}
+
+void printFrees()
+{ chunk* piece = start;
+  printf("First Free %p, size: %lu\n", (void *) piece, piece->ssz);
+  while((piece=piece->next)!=NULL)
+    printf("Free %p, size: %lu\n", (void *) piece, piece->ssz);
 }
