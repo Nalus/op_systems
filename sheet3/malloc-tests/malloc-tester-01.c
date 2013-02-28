@@ -24,7 +24,7 @@ main ()
 
     size_t i = 0;
 
-    struct timespec start, finish;
+    struct timespec start, mstart, mfinish, fstart, ffinish, finish;
     int success = 0;
 
     /* Make sure we limit ourselves to 1 GB.  */
@@ -69,6 +69,7 @@ main ()
 
     /* Start clock.  */
     clock_gettime(CLOCK_REALTIME, &start);
+    //clock_gettime(CLOCK_REALTIME, &mstart);
 
     /* Allocate N chunks 1 byte each.  */
     for (i = 0; i < N; i++) {
@@ -77,10 +78,15 @@ main ()
 
         xmalloc (mem_pool, i, 1);
     }
+    //clock_gettime(CLOCK_REALTIME, &mfinish);
+    //fprintf (stderr, "malloc time: %03li\n", xelapsed (mfinish, mstart));
 
+    //clock_gettime(CLOCK_REALTIME, &fstart);
     /* Free all the N allocated chunks.  */
     for (i = 0; i < N; i++)
         xfree (mem_pool, i);
+    //clock_gettime(CLOCK_REALTIME, &ffinish);
+    //fprintf (stderr, "free time: %03li\n", xelapsed (ffinish, fstart));
 
     /* Allocate a 1/4 GB chunks three times.  */
     xmalloc (mem_pool, 0, one_gb/4);

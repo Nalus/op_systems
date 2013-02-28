@@ -6,7 +6,7 @@
 #include <err.h>
 
 #include <sys/time.h>
-#include "malloc.h"
+#include "mymalloc.h"
 
 /* Structure to track the memory allocations.  */
 struct chunk
