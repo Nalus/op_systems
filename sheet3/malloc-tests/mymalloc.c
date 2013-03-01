@@ -26,7 +26,7 @@ chunk* split (chunk* freeBlock, size_t size)
   freeBlock = ((chunk*) (((void *) new) + size + controlSize)); //old location + size of (control structure + data)
 
   //reshape the last(slack) block with new parameters 
-  freeBlock->ssz = new->ssz - (size + controlSize);
+  freeBlock->ssz = new->ssz - (size + controlSize); //old size - new block size
   freeBlock->busy = SLACK;
   freeBlock->mem = ((void *) freeBlock) + controlSize;
   freeBlock->pred = new;
@@ -35,8 +35,8 @@ chunk* split (chunk* freeBlock, size_t size)
   new->ssz = size;
   new->busy = BUSY;
   new->mem = ((void *) new) + controlSize;
-  //new->pred = new->pred; //stays the same, inherited from freeBlock
   new->succ = freeBlock;
+  //new->pred = new->pred; //stays the same, inherited from freeBlock
 
   return new;
 }
@@ -57,22 +57,45 @@ void* mymalloc(size_t input)
 
   chunk* current = start;
   
-  while(((current->busy != SLACK) && (current->ssz < input)) || (current->succ != NULL))
-  { current = current->succ; }
+  while(current->succ != NULL)
+  { if((current->busy == SLACK) && (current->ssz > input))
+    { return split(current,input)->mem; }
 
-  if(current->ssz < input) { return NULL; }
-  else { return split(current, input)->mem; } //(current->busy == SLACK)
+    current = current->succ;
+  }
+
+  //check the last element in the list
+  if((current->busy == SLACK) && (current->ssz > input))
+  { return split(current,input)->mem; }
+
+  //if even the last element is not good enough, return NULL
+  else { return NULL; }
 }
 
-chunk* mergePair(chunk* prev, chunk* next)
-{ prev->ssz = prev->ssz + next->ssz;
-  prev->succ = next->succ;
+//merge two free chunks
+chunk* mergePair(chunk* older, chunk* younger)
+{ older->ssz = older->ssz + younger->ssz + controlSize;
+  older->succ = younger->succ;
+  if(younger->succ != NULL)
+  { younger->succ->pred = older; }
+  //older->busy, older->pred and older-> mem are already set right
 
-  return prev;
+  return older;
 }
 
-void merge(chunk* piece)
-{ //need doubly-linked list implementation
+void toMerge(chunk* piece)
+{ //piece is already free, check its pred and succ for merger opportunities
+  chunk* reborn = piece;
+
+  if(reborn->succ != NULL)
+  { if(reborn->succ->busy == SLACK)
+    { reborn = mergePair(reborn, reborn->succ); }
+  }
+
+  if(reborn->pred != NULL)
+  { if(reborn->pred->busy == SLACK)
+    { reborn = mergePair(reborn->pred, reborn); }
+  }
 }
 
 void myfree(void* finger)
@@ -82,6 +105,7 @@ void myfree(void* finger)
     if(possible->mem == finger)
     { //check that the pointer points to this chunk
       possible->busy = SLACK; 
+      toMerge(possible);
     }
     //else puts("not a real struct\n");
   }
@@ -90,9 +114,21 @@ void myfree(void* finger)
 
 void printFrees()
 { chunk* piece = start;
-  printf("1st Free %p, size: %lu\n", (void *) piece, piece->ssz);
+  long unsigned freeMem = 0;
+
+  if(piece->busy == SLACK)
+  { printf("1st Free %p, size: %lu\n", (void *) piece, piece->ssz);
+    freeMem += piece->ssz;
+  }
+
   while((piece=piece->succ)!=NULL)
-    printf("Nth Free %p, size: %lu\n", (void *) piece, piece->ssz);
+  { if(piece->busy == SLACK)
+    { printf("Nth Free %p, size: %lu\n", (void *) piece, piece->ssz);
+      freeMem += piece->ssz;
+    }
+  }
+
+  printf("Total free memory: %lu; unfreed memory: %lu\n", freeMem, (MAX_MEMORY-(controlSize+freeMem)));
 }
 
 void* findMem(void* mem)

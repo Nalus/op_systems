@@ -85,6 +85,7 @@ main ()
         if(i==50) printf("%p\n",mem_pool[i].ptr);
         if(i==500) printf("%p\n",mem_pool[i].ptr);
     }
+    printFrees();
 
     /* Allocate a 1/4 GB chunks three times.  */
     xmalloc (mem_pool, 0, one_gb/4);

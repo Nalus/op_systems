@@ -7,6 +7,14 @@ all: $(TESTS)
 malloc-tester%: malloc-tester%.o mymalloc.o
 	$(CC) $^ -o $@ -lrt
 
+small: small.o mymalloc.o
+	$(CC) $^ -o $@ -lrt
+
+test.o: mymalloc.h
+
+s: small
+	./small
+
 malloc-tester%.o: malloc-tester.h mymalloc.h
 
 test: $(TESTS)
@@ -16,4 +24,4 @@ test: $(TESTS)
 	./malloc-tester-04
 
 clean:
-	$(RM) *.o $(TESTS)
+	$(RM) *.o $(TESTS) test.o

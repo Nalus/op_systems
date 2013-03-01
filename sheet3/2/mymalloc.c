@@ -10,7 +10,8 @@ struct CHUNK
 { void* mem;
   size_t ssz;
   int busy;
-  struct CHUNK* next;
+  struct CHUNK* pred;
+  struct CHUNK* succ;
 };
 typedef struct CHUNK chunk;
 
@@ -28,12 +29,14 @@ chunk* split (chunk* freeBlock, size_t size)
   freeBlock->ssz = new->ssz - (size + controlSize);
   freeBlock->busy = SLACK;
   freeBlock->mem = ((void *) freeBlock) + controlSize;
-  freeBlock->next = NULL;
+  freeBlock->pred = new;
+  freeBlock->succ = NULL;
 
   new->ssz = size;
   new->busy = BUSY;
   new->mem = ((void *) new) + controlSize;
-  new->next = freeBlock;
+  //new->pred = new->pred; //stays the same, inherited from freeBlock
+  new->succ = freeBlock;
 
   return new;
 }
@@ -45,7 +48,8 @@ static void initiate()
   start->ssz = MAX_MEMORY - controlSize;
   start->busy = SLACK;
   start->mem = ((void *) start) + controlSize;
-  start->next = NULL;
+  start->pred = NULL;
+  start->succ = NULL;
 }
 
 void* mymalloc(size_t input)
@@ -53,11 +57,33 @@ void* mymalloc(size_t input)
 
   chunk* current = start;
   
-  while(((current->busy != SLACK) && (current->ssz < input)) || (current->next != NULL))
-  { current = current->next; }
+  while(((current->busy != SLACK) && (current->ssz < input)) || (current->succ != NULL))
+  { current = current->succ; }
 
   if(current->ssz < input) { return NULL; }
   else { return split(current, input)->mem; } //(current->busy == SLACK)
+}
+
+//merge two free chunks
+chunk* mergePair(chunk* prev, chunk* next)
+{ prev->ssz = prev->ssz + next->ssz + controlSize;
+  prev->succ = next->succ;
+  //prev->busy = SLACK; //already have to be free
+
+  return prev;
+}
+
+void toMerge(chunk* piece)
+{ //need doubly-linked list implementation
+  chunk* reborn = piece;
+
+  if(reborn->pred != NULL)
+    if(reborn->pred->busy == SLACK)
+      reborn = mergePair(reborn->pred, reborn);
+
+  if(reborn->succ != NULL)
+    if(reborn->succ->busy == SLACK)
+      reborn = mergePair(reborn, reborn->succ);
 }
 
 void myfree(void* finger)
@@ -67,6 +93,7 @@ void myfree(void* finger)
     if(possible->mem == finger)
     { //check that the pointer points to this chunk
       possible->busy = SLACK; 
+      toMerge(possible);
     }
     //else puts("not a real struct\n");
   }
@@ -76,7 +103,7 @@ void myfree(void* finger)
 void printFrees()
 { chunk* piece = start;
   printf("1st Free %p, size: %lu\n", (void *) piece, piece->ssz);
-  while((piece=piece->next)!=NULL)
+  while((piece=piece->succ)!=NULL)
     printf("Nth Free %p, size: %lu\n", (void *) piece, piece->ssz);
 }
 
@@ -84,7 +111,7 @@ void* findMem(void* mem)
 { chunk* piece = start;
   while(piece!=NULL)
   { if(piece->mem == mem) { return ((void *) piece); }
-    piece = piece->next;
+    piece = piece->succ;
   }
 
   return NULL;
