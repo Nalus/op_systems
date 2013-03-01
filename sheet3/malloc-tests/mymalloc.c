@@ -10,6 +10,7 @@ struct CHUNK
 { void* mem;
   size_t ssz;
   int busy;
+  struct CHUNK* pred;
   struct CHUNK* succ;
 };
 typedef struct CHUNK chunk;
@@ -28,11 +29,13 @@ chunk* split (chunk* freeBlock, size_t size)
   freeBlock->ssz = new->ssz - (size + controlSize);
   freeBlock->busy = SLACK;
   freeBlock->mem = ((void *) freeBlock) + controlSize;
+  freeBlock->pred = new;
   freeBlock->succ = NULL;
 
   new->ssz = size;
   new->busy = BUSY;
   new->mem = ((void *) new) + controlSize;
+  //new->pred = new->pred; //stays the same, inherited from freeBlock
   new->succ = freeBlock;
 
   return new;
@@ -45,6 +48,7 @@ static void initiate()
   start->ssz = MAX_MEMORY - controlSize;
   start->busy = SLACK;
   start->mem = ((void *) start) + controlSize;
+  start->pred = NULL;
   start->succ = NULL;
 }
 
