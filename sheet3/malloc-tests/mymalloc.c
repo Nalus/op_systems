@@ -10,7 +10,7 @@ struct CHUNK
 { void* mem;
   size_t ssz;
   int busy;
-  struct CHUNK* next;
+  struct CHUNK* succ;
 };
 typedef struct CHUNK chunk;
 
@@ -28,12 +28,12 @@ chunk* split (chunk* freeBlock, size_t size)
   freeBlock->ssz = new->ssz - (size + controlSize);
   freeBlock->busy = SLACK;
   freeBlock->mem = ((void *) freeBlock) + controlSize;
-  freeBlock->next = NULL;
+  freeBlock->succ = NULL;
 
   new->ssz = size;
   new->busy = BUSY;
   new->mem = ((void *) new) + controlSize;
-  new->next = freeBlock;
+  new->succ = freeBlock;
 
   return new;
 }
@@ -45,7 +45,7 @@ static void initiate()
   start->ssz = MAX_MEMORY - controlSize;
   start->busy = SLACK;
   start->mem = ((void *) start) + controlSize;
-  start->next = NULL;
+  start->succ = NULL;
 }
 
 void* mymalloc(size_t input)
@@ -53,11 +53,22 @@ void* mymalloc(size_t input)
 
   chunk* current = start;
   
-  while(((current->busy != SLACK) && (current->ssz < input)) || (current->next != NULL))
-  { current = current->next; }
+  while(((current->busy != SLACK) && (current->ssz < input)) || (current->succ != NULL))
+  { current = current->succ; }
 
   if(current->ssz < input) { return NULL; }
   else { return split(current, input)->mem; } //(current->busy == SLACK)
+}
+
+chunk* mergePair(chunk* prev, chunk* next)
+{ prev->ssz = prev->ssz + next->ssz;
+  prev->succ = next->succ;
+
+  return prev;
+}
+
+void merge(chunk* piece)
+{ //need doubly-linked list implementation
 }
 
 void myfree(void* finger)
@@ -76,7 +87,7 @@ void myfree(void* finger)
 void printFrees()
 { chunk* piece = start;
   printf("1st Free %p, size: %lu\n", (void *) piece, piece->ssz);
-  while((piece=piece->next)!=NULL)
+  while((piece=piece->succ)!=NULL)
     printf("Nth Free %p, size: %lu\n", (void *) piece, piece->ssz);
 }
 
@@ -84,7 +95,7 @@ void* findMem(void* mem)
 { chunk* piece = start;
   while(piece!=NULL)
   { if(piece->mem == mem) { return ((void *) piece); }
-    piece = piece->next;
+    piece = piece->succ;
   }
 
   return NULL;
