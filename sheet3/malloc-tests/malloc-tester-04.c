@@ -120,6 +120,8 @@ cleanup:
     /* Stop clock.  */
     clock_gettime(CLOCK_REALTIME, &finish);
 
+    printFrees();
+
     if (success)
         fprintf (stderr, "Total time: %03li\n", xelapsed (finish, start));
     else

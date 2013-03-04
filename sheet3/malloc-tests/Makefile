@@ -10,7 +10,7 @@ malloc-tester%: malloc-tester%.o mymalloc.o
 small: small.o mymalloc.o
 	$(CC) $^ -o $@ -lrt
 
-test.o: mymalloc.h
+small.o: mymalloc.h
 
 s: small
 	./small
@@ -24,4 +24,4 @@ test: $(TESTS)
 	./malloc-tester-04
 
 clean:
-	$(RM) *.o $(TESTS) test.o
+	$(RM) *.o $(TESTS) small.o

@@ -80,16 +80,11 @@ main ()
 
     /* Free all the N allocated chunks.  */
     for (i = 0; i < N; i++)
-    {   xfree (mem_pool, i);
-        if(i==0) printf("%p\n",mem_pool[i].ptr);
-        if(i==50) printf("%p\n",mem_pool[i].ptr);
-        if(i==500) printf("%p\n",mem_pool[i].ptr);
-    }
-    printFrees();
+    {   xfree (mem_pool, i); }
 
     /* Allocate a 1/4 GB chunks three times.  */
     xmalloc (mem_pool, 0, one_gb/4);
-    printf("%p\n",mem_pool[0].ptr);
+    //printf("%p\n",mem_pool[0].ptr);
     xmalloc (mem_pool, 1, one_gb/4);
     //printf("%p %i\n",mem_pool[0].ptr, one_gb/4);
     xmalloc (mem_pool, 2, one_gb/4);
