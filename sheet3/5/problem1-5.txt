@@ -1,0 +1,10 @@
+Problem 1.5
+What i found in my research of real-world malloc implementations is that they
+all use some kind of sectioning for their data storage.
+What this means is that they have an array of buckets, one for each sections.
+
+They look exactly like age ranges on most of question forms:
+0-11, 12-20, 21-30, 31-40, 41,50, 51-60, 61+
+
+Of course these are multiplied by memory factors. Some implementations only
+bother to differentiate between two sizes (>=256 b and <256 b).

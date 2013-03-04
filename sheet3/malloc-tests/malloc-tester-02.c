@@ -36,10 +36,10 @@ main ()
     memset (mem_pool, 0, N*sizeof (struct chunk));
 
 
-    if (-1 == setrlimit (RLIMIT_AS, &new_limit))
-        err (EXIT_FAILURE, "setrlimit failed");
-    if (-1 == setrlimit (RLIMIT_DATA, &new_limit))
-        err (EXIT_FAILURE, "setrlimit failed");
+    //if (-1 == setrlimit (RLIMIT_AS, &new_limit))
+    //    err (EXIT_FAILURE, "setrlimit failed");
+    //if (-1 == setrlimit (RLIMIT_DATA, &new_limit))
+    //    err (EXIT_FAILURE, "setrlimit failed");
 
 /* Free the cell IDX in the POOL, allocte memory
    of size N.  If malloc failed, goto cleanup.
@@ -80,12 +80,15 @@ main ()
 
     /* Free all the N allocated chunks.  */
     for (i = 0; i < N; i++)
-        xfree (mem_pool, i);
+    {   xfree (mem_pool, i); }
 
     /* Allocate a 1/4 GB chunks three times.  */
     xmalloc (mem_pool, 0, one_gb/4);
+    //printf("%p\n",mem_pool[0].ptr);
     xmalloc (mem_pool, 1, one_gb/4);
+    //printf("%p %i\n",mem_pool[0].ptr, one_gb/4);
     xmalloc (mem_pool, 2, one_gb/4);
+    //printf("%p %i\n",mem_pool[0].ptr, one_gb/4);
 
     /* Mark success of the test.  */
     success = 1;
