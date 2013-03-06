@@ -11,13 +11,12 @@
 
 struct timespec sstart, sfinish, pstart, pfinish;
 
-typedef struct threadArgs threadArgs_t;
-
 struct threadArgs {
   pthread_t tid;
   int from;
   int to;
 };
+typedef struct threadArgs threadArgs_t;
 
 double a[SIZE];
 double b[SIZE];
@@ -51,6 +50,8 @@ void * simd( void *arg)
 
   for(i=from; i<to; i++)
   {  a[i] = a[i] + b[i]; }
+
+  return NULL;
 }
 
 void initData()
@@ -92,10 +93,10 @@ void parallel(int thread_n)
 
   for(k=0; k<ITERATIONS; k++)
   { for(l=0; l<thread_n; l++)
-    { pthread_create(&arg[l]->tid,NULL,simd,arg[l]); }
+    { if(pthread_create(&arg[l]->tid,NULL,simd,arg[l]) != 0) { perror("Thread not created\n"); exit(EXIT_SUCCESS);} }
 
     for(l=0; l<thread_n; l++)
-    { pthread_join(arg[l]->tid, NULL); }
+    { if(pthread_join(arg[l]->tid, NULL) != 0) { perror("Thread not created\n"); exit(EXIT_SUCCESS);} }
   }
 
   for(l=0; l<thread_n; l++) { free(arg[l]); }
