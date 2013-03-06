@@ -22,7 +22,7 @@ double a[SIZE];
 double b[SIZE];
 threadArgs_t** arg;
 
-//pthread_barrier_t barrier;
+pthread_barrier_t barrier;
 
 /* Time difference between a and b in microseconds.  */
 static int64_t
@@ -53,6 +53,7 @@ void * simd(void *arg)
     {  a[i] = a[i] + b[i]; }
   }
 
+  pthread_barrier_wait(&barrier);
   return NULL;
 }
 
@@ -63,7 +64,6 @@ void initData()
     a[i] = i;
     b[i] = (SIZE-1) - i;
   }
-  //pthread_barrier_init( &barrier, NULL, N_THREADS);
 }
 
 //this function splits SIZE by number as equally as possible
@@ -92,6 +92,8 @@ void parallel(int thread_n)
   for(l=0; l<thread_n; l++) { arg[l] = malloc(sizeof(threadArgs_t)); }
 
   splitting(thread_n);
+
+  pthread_barrier_init( &barrier, NULL, thread_n);
 
   for(l=0; l<thread_n; l++)
   { if(pthread_create(&arg[l]->tid,NULL,simd,arg[l]) != 0) { perror("Thread not created\n"); exit(EXIT_SUCCESS);} }
