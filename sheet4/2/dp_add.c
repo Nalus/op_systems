@@ -9,7 +9,7 @@
 
 #define MIN( a, b)  ((a)<(b)? (a): (b))
 
-struct timespec start, finish;
+struct timespec sstart, sfinish, pstart, pfinish;
 
 typedef struct threadArgs threadArgs_t;
 
@@ -23,7 +23,7 @@ double a[SIZE];
 double b[SIZE];
 threadArgs_t** arg;
 
-pthread_barrier_t barrier;
+//pthread_barrier_t barrier;
 
 /* Time difference between a and b in microseconds.  */
 static int64_t
@@ -42,12 +42,12 @@ void sequential( )
 }
 
 void * simd( void *arg)
-{
-  int tid,from,to,i;
+{ int tid,from,to,i;
 
   tid = ((threadArgs_t *)arg)->tid;
   from = ((threadArgs_t *)arg)->from;
   to = ((threadArgs_t *)arg)->to;
+//  printf("TID: %i: from %i and to %i\n",(int)tid, from, to);
 
   for(i=from; i<to; i++)
   {  a[i] = a[i] + b[i]; }
@@ -82,15 +82,10 @@ void splitting(int number)
   }
 }
 
-int main(int argc, char** argv)
+void parallel(int thread_n)
 { int k,l;
-  initData();
-  clock_gettime(CLOCK_REALTIME, &start);
-  if(argc != 2) { printf("Please provide one number < 30, to specify number of threads\n"); exit(EXIT_SUCCESS); }
-  int thread_n = atoi(argv[1]);
-  if(thread_n == 0 || thread_n > 30) { printf("Please make sure your nubmer is a valid integer <30\n"); exit(EXIT_SUCCESS); }
-
   arg = malloc(sizeof(threadArgs_t*)*thread_n);
+  //allocate memory to every struct
   for(l=0; l<thread_n; l++) { arg[l] = malloc(sizeof(threadArgs_t)); }
 
   splitting(thread_n);
@@ -103,9 +98,28 @@ int main(int argc, char** argv)
     { pthread_join(arg[l]->tid, NULL); }
   }
 
-  clock_gettime(CLOCK_REALTIME, &finish);
-  fprintf (stderr, "Total time: %03li\n", xelapsed (finish, start));
-
+  for(l=0; l<thread_n; l++) { free(arg[l]); }
   free(arg);
+}
+
+int main(int argc, char** argv)
+{ initData();
+  if(argc != 2) { printf("Please provide one number < 30, to specify number of threads\n"); exit(EXIT_SUCCESS); }
+  int thread_n = atoi(argv[1]);
+  if(thread_n == 0 || thread_n > 30) { printf("Please make sure your nubmer is a valid integer <30\n"); exit(EXIT_SUCCESS); }
+
+  //parallel implementation
+  clock_gettime(CLOCK_REALTIME, &pstart);
+  parallel(thread_n);
+  clock_gettime(CLOCK_REALTIME, &pfinish);
+
+  //sequential implementation
+  clock_gettime(CLOCK_REALTIME, &sstart);
+  sequential();
+  clock_gettime(CLOCK_REALTIME, &sfinish);
+
+  fprintf (stderr, "Total parallel time: %03li\n", xelapsed (pfinish, pstart));
+  fprintf (stderr, "Total sequential time: %03li\n", xelapsed (sfinish, sstart));
+
   return(EXIT_SUCCESS);
 }
