@@ -33,13 +33,13 @@ void add_arrays()
 }
 
 void main(int argc, char** argv)
-{  initData();
+{ initData();
 
-   clock_gettime(CLOCK_REALTIME, &start);
-   int i;
-   for(i=0; i < ITERATIONS; i++)
-   { add_arrays(); }
-   clock_gettime(CLOCK_REALTIME, &finish);
+  clock_gettime(CLOCK_REALTIME, &start);
+  int i;
+  for(i=0; i < ITERATIONS; i++)
+  { add_arrays(); }
+  clock_gettime(CLOCK_REALTIME, &finish);
 
   printf("%i\n", a[500]);
   fprintf (stderr, "Total time: %03li\n", xelapsed (finish, start));
