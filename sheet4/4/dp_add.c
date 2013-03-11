@@ -41,9 +41,9 @@ void sequential( )
 }
 
 void * simd(void *arg)
-{ int tid,from,to,i,j;
+{ int /*tid,*/from,to,i,j,dps;
 
-  tid = ((threadArgs_t *)arg)->tid;
+  //tid = ((threadArgs_t *)arg)->tid;
   from = ((threadArgs_t *)arg)->from;
   to = ((threadArgs_t *)arg)->to;
 //  printf("TID: %i: from %i and to %i\n",(int)tid, from, to);
@@ -51,19 +51,25 @@ void * simd(void *arg)
   for(j=0; j<ITERATIONS; j++)
   { for(i=from; i<to; i++)
     {  a[i] = a[i] + b[i]; }
+    dps = pthread_barrier_wait(&barrier);
+    if(dps != 0 && dps != PTHREAD_BARRIER_SERIAL_THREAD)
+    { printf("thread did not wait for the barrier\n");
+      exit(EXIT_FAILURE);
+    }
   }
 
-  pthread_barrier_wait(&barrier);
   return NULL;
 }
 
-void initData()
+void initData(int thread_n)
 {
   int i;
   for( i=0; i<SIZE; i++) {
     a[i] = i;
     b[i] = (SIZE-1) - i;
   }
+
+  pthread_barrier_init(&barrier,NULL,thread_n);
 }
 
 //this function splits SIZE by number as equally as possible
@@ -93,8 +99,6 @@ void parallel(int thread_n)
 
   splitting(thread_n);
 
-  pthread_barrier_init( &barrier, NULL, thread_n);
-
   for(l=0; l<thread_n; l++)
   { if(pthread_create(&arg[l]->tid,NULL,simd,arg[l]) != 0) { perror("Thread not created\n"); exit(EXIT_SUCCESS);} }
 
@@ -110,7 +114,7 @@ int main(int argc, char** argv)
 { if(argc != 2) { printf("Please provide one number < 30, to specify number of threads\n"); exit(EXIT_SUCCESS); }
   int thread_n = atoi(argv[1]);
   if(thread_n == 0 || thread_n > 30) { printf("Please make sure your nubmer is a valid integer <30\n"); exit(EXIT_SUCCESS); }
-  initData();
+  initData(thread_n);
 
   //parallel implementation
   clock_gettime(CLOCK_REALTIME, &pstart);
